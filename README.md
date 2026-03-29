@@ -7,97 +7,132 @@
 
 **Safe, explicit, and powerful manipulation of nested dict structures in Python.**
 
-ZeroDict is a dict wrapper that makes working with nested data structures safer and more convenient, without sacrificing explicitness or introducing surprising behavior.
+ZeroDict is a zero-dependency dict wrapper for Python 3.11+ that makes working with nested data structures safe, explicit, and predictable. It eliminates the fragility of standard dicts without introducing the hidden side effects common in similar libraries.
 
 ---
 
-## Why ZeroDict?
+## The Problem
 
-Working with nested dictionaries in Python is error-prone:
+Nested dictionaries are everywhere in Python: configuration files, API responses, data pipelines, document stores. Yet Python's built-in `dict` makes working with nested structures surprisingly painful.
+
+**Reading is fragile.** Accessing a missing key crashes your program:
 
 ```python
-# Standard dict - fragile and verbose
 config = {"database": {"host": "localhost"}}
 
-# This crashes
-print(config["cache"]["ttl"])  # KeyError!
-
-# So you write defensive code everywhere
-print(config.get("cache", {}).get("ttl"))  # Ugly and tedious
+config["cache"]["ttl"]  # KeyError: 'cache'
 ```
 
-ZeroDict solves this with a clear philosophy: **safe reads, explicit writes**.
+The standard workaround is `.get()` chains, which are verbose and hard to read:
+
+```python
+config.get("cache", {}).get("ttl")                          # one level
+config.get("api", {}).get("endpoints", {}).get("users")     # two levels
+config.get("a", {}).get("b", {}).get("c", {}).get("d")      # this gets old fast
+```
+
+Every nested access requires defensive code. Miss one `.get()` and you're back to `KeyError`.
+
+**Writing is error-prone.** Creating nested structures requires manual initialization of every intermediate level:
+
+```python
+config["cache"] = {}
+config["cache"]["redis"] = {}
+config["cache"]["redis"]["host"] = "localhost"
+config["cache"]["redis"]["port"] = 6379
+```
+
+Four lines to set two values. And if any intermediate key already exists with a non-dict value, you silently overwrite it.
+
+**Existing alternatives trade one problem for another.** Libraries like `addict`, `munch`, and `easydict` solve the reading problem but introduce a worse one: they auto-create nested dicts on any attribute access, including writes. A simple typo silently creates garbage data:
+
+```python
+from addict import Dict
+d = Dict()
+d.databse.host = "localhost"  # Typo! 'databse' now exists as a real key
+# No error, no warning. The bug hides until production.
+```
+
+This is particularly dangerous in configuration management and data pipelines, where a silent typo can propagate through your entire system before anyone notices.
+
+---
+
+## The Solution
+
+ZeroDict solves both problems with a clear design principle: **safe reads, explicit writes**.
+
+- **Reading** a missing path never crashes and never modifies your data. You get a falsy sentinel back, and your dict stays untouched.
+- **Writing** a deep path requires an explicit call (`set_path`), so typos are caught immediately instead of creating phantom keys.
 
 ```python
 from zerodict import ZeroDict
 
 config = ZeroDict({"database": {"host": "localhost"}})
 
-# Safe reading - no crashes
-print(config.cache.ttl)  # None-like sentinel (no KeyError!)
+# Reading: safe, no crashes, no side effects
+print(config.database.host)       # "localhost"
+print(config.cache.ttl)           # None-like sentinel (no KeyError!)
+print(config.a.b.c.d.e)           # Still safe, still no crash
 
-# Explicit deep writes
-config.set_path("cache.ttl", 3600)  # Creates entire path
-print(config.cache.ttl)  # 3600
+# Writing: explicit intent required for deep paths
+config.set_path("cache.redis.host", "localhost")   # Creates entire path in one call
+config.set_path("cache.redis.port", 6379)
+
+# Typos are caught, not hidden
+config.databse.host = "localhost"  # AttributeError: 'databse' doesn't exist
 ```
+
+This is not just syntactic sugar. It is a fundamentally different approach: reads are permissive (your code doesn't crash on optional fields), writes are strict (your code doesn't silently create wrong data).
 
 ---
 
-## Design Philosophy
+## What ZeroDict Gives You
 
-### 1. Safe Reads, No Side Effects
-
-Reading missing paths never crashes and never modifies your data:
+**Path API with dot notation and array support.** Navigate and manipulate nested structures with string paths instead of chained bracket access:
 
 ```python
-ed = ZeroDict({"a": 1})
-
-# All of these are safe
-ed.missing                    # Returns None-like sentinel
-ed.deeply.nested.missing      # Returns None-like sentinel
-ed.get_path("x.y.z")         # Returns None
-
-# No KeyError, no auto-creation, no surprises
+config.set_path("api.endpoints.users", "/v1/users")
+config.set_path("servers[0].host", "prod-1")
+value = config.get_path("api.endpoints.users")
+config.delete_path("servers[0].host")
 ```
 
-### 2. Explicit Deep Writes
-
-Creating nested structures requires explicit intent via the Path API:
+**Atomic batch updates.** Update multiple paths at once with all-or-nothing semantics. If any path fails validation, all changes are rolled back automatically:
 
 ```python
-ed = ZeroDict({"user": {}})
-
-# First-level writes work with dot notation
-ed.new_key = "value"  # Simple and clear
-
-# Deep writes require explicit set_path
-ed.set_path("user.address.city", "NYC")  # Explicit intent
-```
-
-**Why?** This prevents typos from silently creating garbage data. If you write `config.databse.host = "..."` (typo!), you want an error, not a new key.
-
-### 3. Atomic Operations
-
-Multi-path updates are all-or-nothing:
-
-```python
-# Either all updates succeed, or none do (automatic rollback)
 config.set_many({
     "db.host": "localhost",
     "db.port": 5432,
-    "cache.ttl": 3600
+    "cache.ttl": 3600,
 })
+# All succeed, or none do. No partial state.
 ```
 
-### 4. Security by Default
+**Change tracking.** Compare two structures and get a precise list of what changed:
 
-Built-in protections against common attacks:
+```python
+changes = original.diff(modified)
+# [{"op": "replace", "path": "price", "before": 100, "after": 120},
+#  {"op": "add", "path": "discount", "after": 10}]
+```
 
-- Maximum nesting depth (100 levels, prevents stack overflow)
-- Maximum array indices (10000, prevents memory exhaustion)
-- Key validation (prevents path injection)
-- Circular reference detection
-- Size limits on values (10MB)
+**Security by default.** Built-in protections prevent abuse when handling untrusted data: nesting depth limits, array index bounds, key format validation, value size caps, and circular reference detection. These are not optional add-ons; they are always active.
+
+**Zero dependencies.** ZeroDict uses only the Python standard library. No transitive dependency tree, no version conflicts, no supply chain risk. It installs in milliseconds and adds nothing to your dependency audit.
+
+**Full dict compatibility.** ZeroDict supports the standard dict interface (`len`, `in`, `keys`, `values`, `items`, `get`, `pop`, `update`, iteration). You can use it anywhere a dict-like object is expected, and convert back to a plain dict at any time with `to_dict()`.
+
+---
+
+## Who Should Use ZeroDict
+
+ZeroDict is designed for any scenario where you work with nested dictionaries and want predictable, safe behavior:
+
+- **Configuration management**: load config files (JSON, YAML parsed to dict) and access nested settings without defensive `.get()` chains. Batch-update multiple settings atomically.
+- **API response processing**: access deeply nested fields in API responses without worrying about optional or missing keys. No more `response.get("data", {}).get("user", {}).get("email")`.
+- **Data transformation pipelines**: reshape nested structures with path-based set/get/delete/move operations. Track changes with `diff()`.
+- **Prototyping and exploration**: quickly build and manipulate nested data in notebooks or scripts without boilerplate.
+- **Any application handling untrusted nested data**: the built-in security limits protect against pathological inputs without additional code.
 
 ---
 
@@ -115,25 +150,11 @@ Built-in protections against common attacks:
 | Type hints | Full | Partial | Partial | No | No |
 | Circular ref protection | yes | no | yes | no | no |
 
-**vs addict/munch/easydict:** These libraries auto-create nested dicts on write, which is convenient but dangerous:
+**vs addict/munch/easydict:** Auto-create nested dicts on write, which means typos silently create garbage keys. ZeroDict requires explicit `set_path()` for deep writes.
 
-```python
-from addict import Dict
-d = Dict()
-d.databse.host = "localhost"  # Typo! Creates 'databse' key silently
-```
+**vs python-box:** Feature-rich but complex. ZeroDict is focused: safe access + path manipulation + atomic operations, with clear semantics and no magic.
 
-ZeroDict prevents this with explicit `set_path()`:
-
-```python
-ed = ZeroDict({})
-ed.databse.host = "localhost"  # Error: 'databse' doesn't exist
-ed.set_path("database.host", "localhost")  # Explicit and safe
-```
-
-**vs python-box:** Box is feature-rich but complex. ZeroDict is focused: safe access + path manipulation + atomic operations, with clear semantics and no magic.
-
-**vs plain dicts:** ZeroDict adds safety, path API, and atomic operations while maintaining dict compatibility. No `dict.get(x, {}).get(y, {}).get(z)` chains needed.
+**vs plain dicts:** ZeroDict adds safety, path API, and atomic operations while maintaining full dict compatibility.
 
 ---
 
@@ -382,122 +403,27 @@ Async code (asyncio) does not require locks unless using actual threads.
 
 ---
 
-## Use Cases
-
-### Configuration Management
-
-```python
-config = ZeroDict.from_json(config_file)
-
-# Safe access with defaults
-db_host = config.get_path("database.host", "localhost")
-cache_ttl = config.get_path("cache.ttl", 3600)
-
-# Atomic configuration updates
-config.set_many({
-    "database.pool.min": 5,
-    "database.pool.max": 20,
-    "cache.enabled": True
-})
-```
-
-### API Response Processing
-
-```python
-response = ZeroDict(api_response)
-
-# Safe nested access (no crashes on missing fields)
-user_name = response.data.user.profile.name
-avatar_url = response.data.user.avatar.url
-
-if response.data.error.code:
-    handle_error(response.data.error.message)
-```
-
----
-
-## Security Features
-
-- **Maximum nesting depth:** 100 levels (prevents stack overflow)
-- **Maximum array index:** 10000 (prevents memory exhaustion)
-- **Maximum key length:** 1000 characters
-- **Maximum value size:** 10MB per value
-- **Key validation:** Only `[a-zA-Z0-9_-]` allowed (prevents path injection)
-- **Circular reference detection:** Prevents infinite loops
-- **Type validation:** Enforces dict structure integrity
-
-All limits are configurable in the source code constants.
-
----
-
 ## Development Setup
-
-### 1. Install uv
-
-**Linux / macOS:**
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-**Windows (PowerShell):**
-```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-### 2. Clone and install
 
 ```bash
 git clone https://github.com/francescofavi/zerodict.git
 cd zerodict
 uv sync
-uv run pre-commit install
-uv run pre-commit install --hook-type commit-msg
 ```
 
-### 3. Run tests and examples
+### Running Tests
 
 ```bash
 uv run pytest
+```
+
+### Running Examples
+
+```bash
 uv run python examples/demo.py
 ```
 
-> All commands (`uv sync`, `uv run`) work identically on Linux, macOS, and Windows.
-
-### Troubleshooting pre-commit hooks
-
-If committing from an IDE (PyCharm, VS Code, etc.) fails with `pre-commit not found`, the git hooks cannot locate the `pre-commit` executable. This typically happens because the IDE calls `git` outside the project virtualenv.
-
-**Fix 1 — Reinstall hooks** (most common cause after cloning or moving the repo):
-```bash
-uv run pre-commit install
-uv run pre-commit install --hook-type commit-msg
-```
-
-**Fix 2 — Install pre-commit globally** so any IDE can find it:
-```bash
-pipx install pre-commit
-# or
-uv tool install pre-commit
-```
-
-**Fix 3 — Commit from terminal** with the venv active:
-```bash
-source .venv/bin/activate
-git commit -m "feat: my change"
-```
-
-### Commit Convention
-
-This project uses [Conventional Commits](https://www.conventionalcommits.org/). Commit messages are validated automatically by a git hook and in CI.
-
-```
-feat: add flatten() method          # new feature (minor version bump)
-fix: handle None in strict mode     # bug fix (patch version bump)
-docs: update README examples        # documentation only
-refactor: split helpers into modules # code restructuring
-test: add edge cases for set_many   # tests only
-chore: rename dev scripts           # maintenance
-```
+See [Development](docs/DEVELOPMENT.md) for full setup instructions, pre-commit hooks, and commit conventions.
 
 ---
 
@@ -506,6 +432,7 @@ chore: rename dev scripts           # maintenance
 - **[API Reference](docs/API_REFERENCE.md)** - Complete reference for all public APIs, parameters, and advanced usage patterns
 - **[Architecture](docs/ARCHITECTURE.md)** - Internal module structure, responsibilities, boundaries, and data flow
 - **[Anti-Patterns](docs/ANTI_PATTERNS.md)** - Common mistakes and how to avoid them
+- **[Development](docs/DEVELOPMENT.md)** - Setup for contributors, running tests, and running examples
 
 ## Contributing
 
