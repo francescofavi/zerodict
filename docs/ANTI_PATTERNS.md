@@ -161,26 +161,27 @@ ed.get_path("user.name")
 
 ---
 
-### 7. Expecting `delete_path` on arrays to remove elements
+### 7. Not accounting for index shift after `delete_path` on arrays
 
-**Description:** Using `delete_path` on an array index and expecting the element to be removed from the list.
+**Description:** Using `delete_path` on an array index and then accessing subsequent elements by their original indices.
 
-**Why wrong:** `delete_path` on an array index sets the element to `None` — it does not remove it. This preserves array length and indices, which is the intended behavior to avoid shifting indices.
+**Why wrong:** `delete_path` on an array index removes the element from the list, which shifts all subsequent indices. Code that relies on the original positions will access wrong elements or go out of range.
 
 **Correct approach:**
 
 ```python
 ed = ZeroDict({"items": ["a", "b", "c"]})
 
-# This sets items[1] to None, NOT removes it
+# This removes items[1], shifting indices
 ed.delete_path("items[1]")
-# Result: {"items": ["a", None, "c"]}
-
-# If you need actual removal, convert to dict first
-data = ed.to_dict()
-del data["items"][1]
-ed = ZeroDict(data)
 # Result: {"items": ["a", "c"]}
+# items[1] is now "c", not "b"
+
+# If you need to delete multiple elements, delete from highest index first
+ed = ZeroDict({"items": ["a", "b", "c", "d"]})
+ed.delete_path("items[2]")  # Remove "c"
+ed.delete_path("items[1]")  # Remove "b" (was at index 1, still at index 1)
+# Result: {"items": ["a", "d"]}
 ```
 
 ---

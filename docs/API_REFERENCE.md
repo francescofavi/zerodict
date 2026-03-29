@@ -393,7 +393,7 @@ Delete value at specified path.
 
 **Side Effects:**
 - For dict keys: removes the key entirely
-- For array elements: sets element to `None` (preserves array length and indices)
+- For array elements: removes the element from the list (shifts subsequent indices)
 
 **Examples:**
 
@@ -414,9 +414,9 @@ ed.delete_path("user")
 ```python
 ed = ZeroDict({"items": [{"id": 1}, {"id": 2}, {"id": 3}]})
 
-# Sets element to None (preserves indices)
+# Removes element from list (shifts subsequent indices)
 ed.delete_path("items[1]")
-# Result: {"items": [{"id": 1}, None, {"id": 3}]}
+# Result: {"items": [{"id": 1}, {"id": 3}]}
 ```
 
 **Missing paths:**
@@ -664,11 +664,13 @@ changes = original.diff(modified)
 **Note on deleted array elements:**
 ```python
 ed = ZeroDict({"arr": [1, 2, 3]})
-ed.delete_path("arr[1]")  # Sets arr[1] = None
+ed.delete_path("arr[1]")  # Removes element, arr becomes [1, 3]
 
 changes = ZeroDict({"arr": [1, 2, 3]}).diff(ed)
-# Shows: {"op": "replace", "path": "arr[1]", "before": 2, "after": None}
-# (Not shown as "remove" because array element set to None, not removed)
+# Shows:
+# {"op": "replace", "path": "arr[1]", "before": 2, "after": 3}
+# {"op": "remove", "path": "arr[2]", "before": 3}
+# (Element removed, so indices shift — diff compares by position)
 ```
 
 ---
