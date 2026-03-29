@@ -1,6 +1,15 @@
 # API Reference - ZeroDict
 
-This document provides detailed technical documentation for all public APIs in the ZeroDict library. For high-level usage and examples, see the [README](../README.md).
+## Purpose
+
+Complete technical reference for all public APIs in the ZeroDict library, including signatures, parameters, return types, exceptions, side effects, and usage examples.
+
+## Scope
+
+- **Included:** All public classes (`ZeroDict`, `MissingPath`), all public methods, security constants, error handling patterns, performance considerations.
+- **Excluded:** Internal/private methods (prefixed with `_`), implementation details of delegation classes (`PathAPI`, `DiffEngine`, `Serializer`, `Validator`).
+
+For high-level usage and examples, see the [README](../README.md).
 
 ## Table of Contents
 
