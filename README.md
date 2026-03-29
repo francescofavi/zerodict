@@ -503,7 +503,9 @@ chore: rename dev scripts           # maintenance
 
 ## Further Documentation
 
-- **[Full API Reference](doc/API_REFERENCE.md)** - Detailed documentation of all public APIs, parameters, and advanced usage patterns
+- **[API Reference](docs/API_REFERENCE.md)** - Complete reference for all public APIs, parameters, and advanced usage patterns
+- **[Architecture](docs/ARCHITECTURE.md)** - Internal module structure, responsibilities, boundaries, and data flow
+- **[Anti-Patterns](docs/ANTI_PATTERNS.md)** - Common mistakes and how to avoid them
 
 ## Contributing
 
