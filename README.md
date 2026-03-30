@@ -1,9 +1,13 @@
 # ZeroDict
 
 [![CI](https://github.com/francescofavi/zerodict/actions/workflows/ci.yml/badge.svg)](https://github.com/francescofavi/zerodict/actions/workflows/ci.yml)
-[![PyPI version](https://img.shields.io/pypi/v/zerodict)](https://pypi.org/project/zerodict/)
-[![Python versions](https://img.shields.io/pypi/pyversions/zerodict)](https://pypi.org/project/zerodict/)
+[![PyPI version](https://img.shields.io/pypi/v/zerodict.svg)](https://pypi.org/project/zerodict/)
+[![Python versions](https://img.shields.io/pypi/pyversions/zerodict.svg)](https://pypi.org/project/zerodict/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Status](https://img.shields.io/pypi/status/zerodict.svg)](https://pypi.org/project/zerodict/)
+[![Typed](https://img.shields.io/badge/typed-PEP%20561-blue.svg)](https://peps.python.org/pep-0561/)
+[![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)]()
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://docs.astral.sh/ruff/)
 
 **Safe, explicit, and powerful manipulation of nested dict structures in Python.**
 
@@ -423,16 +427,16 @@ uv run pytest
 uv run python examples/demo.py
 ```
 
-See [Development](docs/DEVELOPMENT.md) for full setup instructions, pre-commit hooks, and commit conventions.
+See [Development](https://github.com/francescofavi/zerodict/blob/main/docs/DEVELOPMENT.md) for full setup instructions, pre-commit hooks, and commit conventions.
 
 ---
 
 ## Further Documentation
 
-- **[API Reference](docs/API_REFERENCE.md)** - Complete reference for all public APIs, parameters, and advanced usage patterns
-- **[Architecture](docs/ARCHITECTURE.md)** - Internal module structure, responsibilities, boundaries, and data flow
-- **[Anti-Patterns](docs/ANTI_PATTERNS.md)** - Common mistakes and how to avoid them
-- **[Development](docs/DEVELOPMENT.md)** - Setup for contributors, running tests, and running examples
+- **[API Reference](https://github.com/francescofavi/zerodict/blob/main/docs/API_REFERENCE.md)** - Complete reference for all public APIs, parameters, and advanced usage patterns
+- **[Architecture](https://github.com/francescofavi/zerodict/blob/main/docs/ARCHITECTURE.md)** - Internal module structure, responsibilities, boundaries, and data flow
+- **[Anti-Patterns](https://github.com/francescofavi/zerodict/blob/main/docs/ANTI_PATTERNS.md)** - Common mistakes and how to avoid them
+- **[Development](https://github.com/francescofavi/zerodict/blob/main/docs/DEVELOPMENT.md)** - Setup for contributors, running tests, and running examples
 
 ## Contributing
 
@@ -442,4 +446,4 @@ For bug reports and feature requests, please use [GitHub Issues](https://github.
 
 ## License
 
-MIT License - Copyright (c) 2025 Francesco Favi
+[MIT License](https://github.com/francescofavi/zerodict/blob/main/LICENSE) - Copyright (c) 2025 Francesco Favi
