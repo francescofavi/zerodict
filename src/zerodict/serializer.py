@@ -58,8 +58,9 @@ class Serializer:
 
     @staticmethod
     def to_json(zd: ZeroDict, **kwargs: Any) -> str:
-        defaults = {"ensure_ascii": False, "indent": 2}
-        return json.dumps(Serializer.to_dict(zd), **(defaults | kwargs))
+        opts: dict[str, Any] = {"ensure_ascii": False, "indent": 2}
+        opts.update(kwargs)
+        return json.dumps(Serializer.to_dict(zd), **opts)
 
     @staticmethod
     def from_json(s: str) -> ZeroDict:

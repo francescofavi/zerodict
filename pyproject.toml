@@ -5,7 +5,7 @@ description = "Convenient manipulation of nested dict structures with dot notati
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
-authors = [{name = "Francesco Favi", email = "14098835+francescofavi@users.noreply.github.com"}]
+authors = [{name = "Francesco Favi", email = "ffavidev@gmail.com"}]
 keywords = ["dict", "nested", "dot-notation", "configuration", "path-api"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -26,6 +26,7 @@ Repository = "https://github.com/francescofavi/zerodict"
 Issues = "https://github.com/francescofavi/zerodict/issues"
 Documentation = "https://github.com/francescofavi/zerodict#readme"
 Changelog = "https://github.com/francescofavi/zerodict/releases"
+LinkedIn = "https://www.linkedin.com/in/francesco-favi/"
 
 [build-system]
 requires = ["hatchling"]
