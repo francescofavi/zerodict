@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/francescofavi/zerodict/main/logo.png" alt="ZeroDict logo" width="200">
+</p>
+
 # ZeroDict
 
 [![CI](https://github.com/francescofavi/zerodict/actions/workflows/ci.yml/badge.svg)](https://github.com/francescofavi/zerodict/actions/workflows/ci.yml)
