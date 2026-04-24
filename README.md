@@ -4,14 +4,14 @@
 
 # ZeroDict
 
-[![CI](https://github.com/francescofavi/zerodict/actions/workflows/ci.yml/badge.svg)](https://github.com/francescofavi/zerodict/actions/workflows/ci.yml)
-[![PyPI version](https://img.shields.io/pypi/v/zerodict.svg)](https://pypi.org/project/zerodict/)
-[![Python versions](https://img.shields.io/pypi/pyversions/zerodict.svg)](https://pypi.org/project/zerodict/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Status](https://img.shields.io/pypi/status/zerodict.svg)](https://pypi.org/project/zerodict/)
-[![Typed](https://img.shields.io/badge/typed-PEP%20561-blue.svg)](https://peps.python.org/pep-0561/)
-[![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)]()
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://docs.astral.sh/ruff/)
+[![CI](https://img.shields.io/github/actions/workflow/status/francescofavi/zerodict/ci.yml?branch=main&label=CI&cacheSeconds=0)](https://github.com/francescofavi/zerodict/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/zerodict.svg?cacheSeconds=0)](https://pypi.org/project/zerodict/)
+[![Python versions](https://img.shields.io/pypi/pyversions/zerodict.svg?cacheSeconds=0)](https://pypi.org/project/zerodict/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?cacheSeconds=0)](https://github.com/francescofavi/zerodict/blob/main/LICENSE)
+[![Status](https://img.shields.io/pypi/status/zerodict.svg?cacheSeconds=0)](https://pypi.org/project/zerodict/)
+[![Typed](https://img.shields.io/badge/typed-PEP%20561-blue.svg?cacheSeconds=0)](https://peps.python.org/pep-0561/)
+[![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg?cacheSeconds=0)]()
+[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg?cacheSeconds=0)](https://docs.astral.sh/ruff/)
 
 **Safe, explicit, and powerful manipulation of nested dict structures in Python.**
 
@@ -408,6 +408,33 @@ with lock:
 ```
 
 Async code (asyncio) does not require locks unless using actual threads.
+
+---
+
+## Known limits and open issues
+
+Where the project is deliberately limited, where it enforces a hard constraint, and what is not yet shipped — one list, grouped by axis (`design:` intentional trade-off, `limit:` hard constraint visible in code, `open:` tracked roadmap item).
+
+- *design:* Explicit `set_path()` required for deep writes — no auto-creation on attribute access (the opposite of addict/munch; typos surface as errors rather than phantom keys).
+- *design:* Not thread-safe — concurrent writers must coordinate with an external lock (RLock).
+- *design:* `copy()` is deep by default — shallow copy (`copy(deep=False)`) shares nested references on purpose.
+- *limit:* Security limits are always on (nesting depth, array index bounds, key format, value size, circular refs) — not opt-out.
+- *limit:* Path expression grammar covers `a.b.c` + `arr[0]` only — no wildcards, no slicing, no predicates.
+- *limit:* `to_json()` requires every value to be JSON-serializable — non-JSON values must be converted first.
+- *limit:* `set_many()` is all-or-nothing — any invalid path rolls back every other update in the batch.
+- *open:* No observable roadmap items tracked in code as of the current release.
+
+## Anti-patterns — how NOT to use this project
+
+Usage patterns that reliably cause trouble:
+
+- Do not expect addict/munch-style attribute auto-creation — deep writes must go through `set_path()`.
+- Do not share a ZeroDict instance across threads without an external lock.
+- Do not call `copy(deep=False)` when you plan to mutate nested structures — the shallow copy shares references with the original.
+- Do not store non-JSON-serializable values (`set`, custom classes, raw `datetime`) in a ZeroDict you later `to_json()`.
+- Do not use `is None` to detect a missing path — `MissingPath() is None` is False; use `== None`, `not value`, or `"key" in zd` instead.
+- Do not bundle independent updates in `set_many()` — a single invalid path rolls back the entire batch.
+- Do not assume array auto-extension preserves value types — gaps are padded with `None`.
 
 ---
 

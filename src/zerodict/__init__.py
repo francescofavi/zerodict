@@ -7,7 +7,7 @@ Features:
 - Atomic batch updates
 - Deep diff for change tracking
 
-Copyright (c) 2025 Francesco Favi
+Copyright (c) 2025-present Francesco Favi
 License: MIT
 """
 
