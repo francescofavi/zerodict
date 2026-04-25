@@ -563,7 +563,9 @@ ed = ZeroDict({
 })
 
 ed.move("inbox[0]", "archive[0]")
-# Result: inbox[0] becomes None, archive[0] has the message
+# Result: inbox is now [] (element popped, list shrinks),
+#         archive is now [{"id": 1, "msg": "Hello"}].
+# delete_path on an array element pops it — subsequent indices shift left.
 ```
 
 **Circular reference prevention:**

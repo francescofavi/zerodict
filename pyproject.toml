@@ -48,6 +48,7 @@ exclude = [
     "/.run.sh",
     "/.pre-commit-config.yaml",
     "/.python-version",
+    "/.internal_docs/**",
 ]
 
 [tool.uv]
