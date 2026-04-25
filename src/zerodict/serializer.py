@@ -14,7 +14,6 @@ if TYPE_CHECKING:
 class Serializer:
     """Serialization utilities for ZeroDict."""
 
-    # Recursively convert value, handling nested lists and ZeroDicts.
     @staticmethod
     def _convert_value(v: Any, _visited: set[int], _depth: int) -> Any:
         from zerodict.zerodict import ZeroDict
