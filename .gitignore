@@ -12,6 +12,10 @@ htmlcov/
 # All hidden directories (starts with .)
 .*/
 
+# Symlinks to out-of-tree dev caches/venvs (not matched by .*/ rule above)
+.mypy_cache
+.venv
+
 # Keep .gitignore, .github, and .internal_docs
 !.gitignore
 !.github/
