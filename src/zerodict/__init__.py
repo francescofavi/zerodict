@@ -14,7 +14,7 @@ License: MIT
 from zerodict.missing_path import MissingPath
 from zerodict.zerodict import ZeroDict
 
-__version__ = "0.1.2"
+__version__ = "0.1.1"
 __author__ = "Francesco Favi"
 __email__ = "ffavidev@gmail.com"
 
