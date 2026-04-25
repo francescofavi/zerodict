@@ -6,7 +6,7 @@ Setup instructions for contributors: installing the project locally, running the
 
 ## Scope
 
-Covers local development workflow only. Does not cover CI/CD or publishing — release is automated via Trusted Publishing on GitHub Actions and triggered manually from the Releases page.
+Covers local development workflow plus the release/publish workflow split. Releases are automated via [release-please](https://github.com/googleapis/release-please) on `main`, while publishing to PyPI is a manual `workflow_dispatch` step gated by a protected GitHub environment (Trusted Publishing / OIDC).
 
 ---
 
@@ -185,11 +185,35 @@ The demo covers the core usage scenarios: dot notation reading, Path API, array 
 
 ## Release Process
 
-Releases are cut via Trusted Publishing (OIDC) on GitHub Actions:
+Versioning, changelog, and PyPI publication are split across two GitHub Actions workflows.
 
-1. Bump the version in `src/zerodict/__init__.py` (`__version__`).
-2. Update `CHANGELOG.md` with a new entry for the version.
-3. Tag the commit (`git tag vX.Y.Z`) and push the tag.
-4. The Release workflow (`.github/workflows/`) builds the sdist + wheel via `uv build` and publishes to PyPI through Trusted Publishing.
+### 1. release-please (automatic, runs on `main`)
 
-No `~/.pypirc` is used. No PyPI tokens are stored locally. Publishing is gated by GitHub environment protection rules — see the repository Settings → Environments page.
+`.github/workflows/release.yml` runs the `googleapis/release-please-action` on every push to `main`. release-please reads the Conventional Commits accumulated since the last release and:
+
+- Opens (or updates) a single open **release PR** that bumps `__version__` in `src/zerodict/__init__.py`, updates `CHANGELOG.md`, and updates `.release-please-manifest.json`.
+- When that release PR is merged, release-please creates a git tag (`vX.Y.Z`) and a GitHub release.
+
+To force a specific version (e.g. patch instead of the auto-detected minor), add a `Release-As: X.Y.Z` trailer to a commit message. Configuration lives in `release-please-config.json`.
+
+### 2. publish.yml (manual, `workflow_dispatch`)
+
+`.github/workflows/publish.yml` is a manual workflow. After release-please has created the GitHub release, dispatch the workflow from the Actions tab:
+
+- The `build` job runs `uv build` to produce sdist and wheel.
+- The `publish` job downloads the artifacts and uploads them to PyPI via `pypa/gh-action-pypi-publish@release/v1` using Trusted Publishing (OIDC, no API token).
+- The `publish` job runs in the `pypi` GitHub environment, which is protected by environment rules (see repository Settings → Environments).
+
+No `~/.pypirc` is used. No PyPI tokens are stored locally or in repo secrets.
+
+### Day-to-day contributor flow
+
+For everyday work you do not interact with the release flow at all — it runs from your Conventional Commits on `main`:
+
+```
+feat: add X         -> minor bump in next release PR
+fix: handle Y       -> patch bump in next release PR
+docs: update Z      -> no version bump
+```
+
+Manual `__version__` bumps and manual `CHANGELOG.md` edits are not needed and will be overwritten by release-please.
