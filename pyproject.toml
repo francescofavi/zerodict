@@ -12,11 +12,14 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Typing :: Typed",
     "Operating System :: OS Independent",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = []
 
@@ -41,14 +44,23 @@ packages = ["src/zerodict"]
 [tool.hatch.build.targets.sdist]
 exclude = [
     "/.idea/**",
+    "/.github/**",
+    "/.venv/**",
+    "/.internal_docs/**",
     "/dist/**",
+    "/build/**",
+    ".gitignore",
+    "/.pre-commit-config.yaml",
+    "/.python-version",
+    "/release-please-config.json",
+    "/.release-please-manifest.json",
+    "/.coverage",
+    "/uv.lock",
     "/.check_quality.py",
     "/.setup.bat",
     "/.setup.sh",
     "/.run.sh",
-    "/.pre-commit-config.yaml",
-    "/.python-version",
-    "/.internal_docs/**",
+    "/.scripts/**",
 ]
 
 [tool.uv]
@@ -144,7 +156,7 @@ exclude_dirs = [
     "dist",
     "build",
     "examples",
-    "scripts"
+    "scripts",
 ]
 exclude = [".check_quality.py"]
 skips = ["B101","B403","B110"]
