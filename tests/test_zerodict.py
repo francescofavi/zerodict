@@ -27,10 +27,6 @@ import pytest
 from zerodict import ZeroDict
 from zerodict.path_api import Token
 
-# =============================================================================
-# BASIC OPERATIONS
-# =============================================================================
-
 
 class TestDotNotation:
     """Test dot notation for reading and writing."""
@@ -180,11 +176,6 @@ class TestCopy:
         assert zd.nested.value == 888  # Shared reference
 
 
-# =============================================================================
-# PATH API
-# =============================================================================
-
-
 class TestPathGet:
     """Test get_path operations."""
 
@@ -275,11 +266,6 @@ class TestPathValidation:
             zd.set_path("bad key.value", 1)
 
 
-# =============================================================================
-# ARRAY SUPPORT
-# =============================================================================
-
-
 class TestArrayOperations:
     """Test array creation and access."""
 
@@ -344,11 +330,6 @@ class TestArrayOperations:
         assert isinstance(zd._data["users"][0], ZeroDict)
 
 
-# =============================================================================
-# BATCH OPERATIONS
-# =============================================================================
-
-
 class TestSetMany:
     """Test atomic batch updates."""
 
@@ -387,11 +368,6 @@ class TestSetMany:
             zd.set_many({"a.b": 1, deep_path: "fail"})
 
         assert zd.to_dict() == {}
-
-
-# =============================================================================
-# MOVE OPERATIONS
-# =============================================================================
 
 
 class TestMove:
@@ -484,11 +460,6 @@ class TestMove:
             zd.move("arr[10]", "dest2", strict=True)
 
 
-# =============================================================================
-# DIFF
-# =============================================================================
-
-
 class TestDiff:
     """Test change tracking."""
 
@@ -518,11 +489,6 @@ class TestDiff:
         changes = zd1.diff(zd2)
 
         assert changes[0]["path"] == "items[1]"  # Not "items.[1]"
-
-
-# =============================================================================
-# VALIDATION
-# =============================================================================
 
 
 class TestKeyValidation:
@@ -594,11 +560,6 @@ class TestTokenValidation:
             Token(key="a", idx=0)
 
 
-# =============================================================================
-# SECURITY LIMITS
-# =============================================================================
-
-
 class TestSecurityLimits:
     """Test security limits."""
 
@@ -647,11 +608,6 @@ class TestSecurityLimits:
         assert len(repr_str) < 1000
 
 
-# =============================================================================
-# STRICT MODE
-# =============================================================================
-
-
 class TestStrictMode:
     """Test strict mode behavior."""
 
@@ -671,11 +627,6 @@ class TestStrictMode:
 
         with pytest.raises(TypeError, match="Cannot traverse None"):
             zd.get_path("a.b.c", strict=True)
-
-
-# =============================================================================
-# SERIALIZATION
-# =============================================================================
 
 
 class TestSerialization:
@@ -721,11 +672,6 @@ class TestSerialization:
         loaded = ZeroDict.from_json(json_str)
 
         assert loaded == original
-
-
-# =============================================================================
-# MISSING PATH BEHAVIOR
-# =============================================================================
 
 
 class TestMissingPath:
@@ -779,11 +725,6 @@ class TestMissingPath:
         assert len(mapping) == 1
 
 
-# =============================================================================
-# WARNINGS
-# =============================================================================
-
-
 class TestWarnings:
     """Test warning behavior."""
 
@@ -794,11 +735,6 @@ class TestWarnings:
 
             assert len(w) == 1
             assert "conflict" in str(w[0].message).lower()
-
-
-# =============================================================================
-# INTEGRATION
-# =============================================================================
 
 
 class TestIntegration:
