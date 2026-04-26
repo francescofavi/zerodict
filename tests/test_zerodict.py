@@ -638,7 +638,7 @@ class TestSerialization:
         plain = zd.to_dict()
 
         assert isinstance(plain, dict)
-        assert not isinstance(plain, ZeroDict)
+        assert not isinstance(plain, ZeroDict)  # type: ignore[unreachable]
         assert plain == {"a": {"b": 1}, "c": [1, 2]}
 
     def test_from_dict(self) -> None:
