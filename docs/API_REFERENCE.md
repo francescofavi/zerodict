@@ -1072,6 +1072,31 @@ assert original.nested.value == 999  # Shared reference
 
 ---
 
+### `repr(zd)` / `__repr__()`
+
+String representation of the ZeroDict for debugging and logging.
+
+**Returns:**
+- `str`: Formatted as `ZeroDict({...})` with the internal dict representation.
+
+**Behavior:**
+- Output is truncated to ~500 characters for large structures, showing an approximate key count.
+- Circular references are handled gracefully and rendered as `<circular reference, N keys>`.
+
+**Examples:**
+
+```python
+ed = ZeroDict({"name": "Alice", "age": 30})
+print(repr(ed))  # ZeroDict({'name': 'Alice', 'age': 30})
+
+# Large structures are truncated
+large = ZeroDict({f"key_{i}": i for i in range(1000)})
+print(repr(large))
+# ZeroDict({'key_0': 0, 'key_1': 1, ... [showing ~N of 1000 keys])
+```
+
+---
+
 ## Security and Validation
 
 ### Key Validation Function
