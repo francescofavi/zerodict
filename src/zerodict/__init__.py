@@ -16,6 +16,6 @@ from zerodict.zerodict import ZeroDict
 
 __version__ = "0.1.1"
 __author__ = "Francesco Favi"
-__email__ = "ffavidev@gmail.com"
+__email__ = "14098835+francescofavi@users.noreply.github.com"
 
 __all__ = ["ZeroDict", "MissingPath"]

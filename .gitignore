@@ -12,23 +12,21 @@ htmlcov/
 # All hidden directories (starts with .)
 .*/
 
-# Symlinks to out-of-tree dev caches/venvs (not matched by .*/ rule above)
+# Symlinks to out-of-tree dev caches/venvs (not always matched by .*/)
 .mypy_cache
 .venv
 
-# Keep .gitignore, .github, and .internal_docs
+# Keep tracked dotfiles/dotdirs (maintainer-only — excluded from PyPI sdist via pyproject)
 !.gitignore
 !.github/
 !.internal_docs/
+!.python-version
+!.pre-commit-config.yaml
+!.release-please-manifest.json
 
-# Hidden files to ignore
+# Hidden files to ignore (genuinely local, never committed)
 .DS_Store
-.coverage
 .env
-.run.sh
-.setup.sh
-.setup.bat
-.check_quality.py
 
 # Other files
 *.swp
@@ -39,7 +37,6 @@ htmlcov/
 # Virtual environments (non-hidden)
 env/
 venv/
-/.scripts/
 
-# Lock files (library, not application)
+# Library: uv.lock not committed (deterministic resolution is for apps, not libs)
 uv.lock
