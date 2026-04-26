@@ -455,7 +455,7 @@ uv run pytest
 ### Running Examples
 
 ```bash
-uv run python examples/demo.py
+uv run python examples/01_quickstart.py
 ```
 
 See [Development](https://github.com/francescofavi/zerodict/blob/main/docs/DEVELOPMENT.md) for full setup instructions, pre-commit hooks, and commit conventions.

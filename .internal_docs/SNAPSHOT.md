@@ -50,7 +50,7 @@ This file is regenerated on each documentation cycle. The data it contains was c
 
 | Examples | LOC |
 |---|---:|
-| `examples/demo.py` | 253 |
+| `examples/01_quickstart.py` | 253 |
 
 ---
 

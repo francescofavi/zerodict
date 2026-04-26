@@ -176,10 +176,10 @@ Commit-msg validation is enforced both locally (pre-commit `commit-msg` hook) an
 ## Running Examples
 
 ```bash
-uv run python examples/demo.py
+uv run python examples/01_quickstart.py
 ```
 
-The demo covers the core usage scenarios: dot notation reading, Path API, array support, atomic batch updates, diff/change tracking, JSON serialization, dict interface, strict mode, and real-world patterns.
+The quickstart example covers the core usage scenarios: dot notation reading, Path API, array support, atomic batch updates, diff/change tracking, JSON serialization, dict interface, strict mode, and real-world patterns.
 
 ---
 
