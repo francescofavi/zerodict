@@ -204,7 +204,7 @@ if __name__ == "__main__":
 
     # Load config
     config_data = {
-        "server": {"host": "0.0.0.0", "port": 8080},
+        "server": {"host": "0.0.0.0", "port": 8080},  # nosec B104
         "database": {"enabled": True, "url": "postgresql://localhost/mydb"},
     }
 
