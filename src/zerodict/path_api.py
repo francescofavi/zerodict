@@ -15,11 +15,6 @@ if TYPE_CHECKING:
     from zerodict.zerodict import ZeroDict
 
 
-# =============================================================================
-# TOKEN
-# =============================================================================
-
-
 @dataclass(slots=True)
 class Token:
     """Path component: either key (dict) or idx (array), not both."""
@@ -36,11 +31,6 @@ class Token:
 
         if self.idx is not None and self.idx < 0:
             raise ValueError(f"Token index must be non-negative, got {self.idx}")
-
-
-# =============================================================================
-# PATH API
-# =============================================================================
 
 
 class PathAPI:
@@ -310,7 +300,6 @@ class PathAPI:
 
         return False
 
-    # Atomic batch update: all or nothing.
     @staticmethod
     def set_many(zd: ZeroDict, updates: dict[str, Any], *, strict: bool = False) -> None:
         if not updates:
@@ -366,7 +355,6 @@ class PathAPI:
                 )
             raise e
 
-    # Move value from source_path to dest_path using get/set/delete composition.
     @staticmethod
     def move(zd: ZeroDict, source_path: str, dest_path: str, *, strict: bool = False) -> None:
         if not source_path or not source_path.strip():

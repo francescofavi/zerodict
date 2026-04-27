@@ -113,7 +113,7 @@ ZeroDict is organized into the following modules:
 
 ### Type System
 
-ZeroDict uses modern Python 3.11+ type hints:
+ZeroDict uses modern Python 3.12+ type hints:
 
 ```python
 from typing import Any
@@ -563,7 +563,9 @@ ed = ZeroDict({
 })
 
 ed.move("inbox[0]", "archive[0]")
-# Result: inbox[0] becomes None, archive[0] has the message
+# Result: inbox is now [] (element popped, list shrinks),
+#         archive is now [{"id": 1, "msg": "Hello"}].
+# delete_path on an array element pops it — subsequent indices shift left.
 ```
 
 **Circular reference prevention:**
@@ -1066,6 +1068,31 @@ shallow = original.copy(deep=False)
 
 shallow.nested.value = 999
 assert original.nested.value == 999  # Shared reference
+```
+
+---
+
+### `repr(zd)` / `__repr__()`
+
+String representation of the ZeroDict for debugging and logging.
+
+**Returns:**
+- `str`: Formatted as `ZeroDict({...})` with the internal dict representation.
+
+**Behavior:**
+- Output is truncated to ~500 characters for large structures, showing an approximate key count.
+- Circular references are handled gracefully and rendered as `<circular reference, N keys>`.
+
+**Examples:**
+
+```python
+ed = ZeroDict({"name": "Alice", "age": 30})
+print(repr(ed))  # ZeroDict({'name': 'Alice', 'age': 30})
+
+# Large structures are truncated
+large = ZeroDict({f"key_{i}": i for i in range(1000)})
+print(repr(large))
+# ZeroDict({'key_0': 0, 'key_1': 1, ... [showing ~N of 1000 keys])
 ```
 
 ---

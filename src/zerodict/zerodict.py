@@ -13,6 +13,8 @@ from zerodict.path_api import PathAPI
 from zerodict.serializer import Serializer
 from zerodict.validator import MAX_NESTING_DEPTH, Validator
 
+_MAX_REPR_LENGTH: int = 500
+
 
 class ZeroDict:
     """
@@ -110,10 +112,6 @@ class ZeroDict:
 
         return v
 
-    # =========================================================================
-    # DOT NOTATION ACCESS
-    # =========================================================================
-
     def __getattr__(self, key: str) -> Any:
         if key.startswith("_"):
             return object.__getattribute__(self, key)
@@ -127,10 +125,6 @@ class ZeroDict:
         else:
             Validator.validate_dict_key(key)
             self._data[key] = self._wrap(value)
-
-    # =========================================================================
-    # PATH API (delegated to PathAPI)
-    # =========================================================================
 
     def get_path(self, path: str, default: Any = None, *, strict: bool = False) -> Any:
         return PathAPI.get(self, path, default, strict=strict)
@@ -147,10 +141,6 @@ class ZeroDict:
     def move(self, source_path: str, dest_path: str, *, strict: bool = False) -> None:
         PathAPI.move(self, source_path, dest_path, strict=strict)
 
-    # =========================================================================
-    # SERIALIZATION (delegated to Serializer)
-    # =========================================================================
-
     def to_dict(self) -> dict[str, Any]:
         return Serializer.to_dict(self)
 
@@ -165,19 +155,11 @@ class ZeroDict:
     def from_json(s: str) -> ZeroDict:
         return Serializer.from_json(s)
 
-    # =========================================================================
-    # DIFF AND COMPARISON (delegated to DiffEngine)
-    # =========================================================================
-
     def diff(self, other: ZeroDict) -> list[dict[str, Any]]:
         return DiffEngine.diff(self, other)
 
     def __eq__(self, other: object) -> bool:
         return DiffEngine.compare(self, other)
-
-    # =========================================================================
-    # DICT INTERFACE
-    # =========================================================================
 
     def __len__(self) -> int:
         return len(self._data)
@@ -236,10 +218,6 @@ class ZeroDict:
     def contains_key(self, key: str) -> bool:
         return key in self._data
 
-    # =========================================================================
-    # UTILITY METHODS
-    # =========================================================================
-
     def copy(self, deep: bool = True) -> ZeroDict:
         new_zd = ZeroDict.__new__(ZeroDict)
         if deep:
@@ -264,11 +242,13 @@ class ZeroDict:
     def __repr__(self) -> str:
         try:
             repr_str = repr(self._data)
-            max_len = 500
-            if len(repr_str) > max_len:
-                shown_keys = repr_str[:max_len].count("':")
+            if len(repr_str) > _MAX_REPR_LENGTH:
+                shown_keys = repr_str[:_MAX_REPR_LENGTH].count("':")
                 total_keys = len(self)
-                return f"ZeroDict({repr_str[:max_len]}... [showing ~{shown_keys} of {total_keys} keys])"
+                return (
+                    f"ZeroDict({repr_str[:_MAX_REPR_LENGTH]}... "
+                    f"[showing ~{shown_keys} of {total_keys} keys])"
+                )
             return f"ZeroDict({repr_str})"
         except RecursionError:
             return f"ZeroDict(<circular reference, {len(self)} keys>)"

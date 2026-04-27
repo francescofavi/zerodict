@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import re
 import sys
+import warnings
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from zerodict.path_api import Token
 
-# =============================================================================
-# CONSTANTS
-# =============================================================================
 
 MAX_ARRAY_INDEX: int = 10000
 MAX_NESTING_DEPTH: int = 100
@@ -21,10 +19,6 @@ MAX_PATH_LENGTH: int = 10000
 MAX_MISSING_PATH_DEPTH: int = 100
 
 VALID_KEY_PATTERN: re.Pattern[str] = re.compile(r"^[a-zA-Z0-9_-]+$")
-
-# =============================================================================
-# VALIDATOR
-# =============================================================================
 
 
 class Validator:
@@ -137,8 +131,6 @@ class Validator:
     @staticmethod
     def validate_dict_key(key: Any, warn_underscore: bool = False) -> None:
         """Validate a key for dict operations (type check + format + underscore warning)."""
-        import warnings
-
         if not isinstance(key, str):
             raise TypeError(f"Key must be a string, got {type(key).__name__}")
         Validator.validate_key(key)
