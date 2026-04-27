@@ -130,7 +130,7 @@ if __name__ == "__main__":
         op = change["op"]
         path = change["path"]
         if op == "replace":
-            print(f"  CHANGED {path}: {change['before']} → {change['after']}")
+            print(f"  CHANGED {path}: {change['before']} -> {change['after']}")
         elif op == "add":
             print(f"  ADDED {path}: {change['after']}")
         elif op == "remove":
