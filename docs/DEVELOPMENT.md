@@ -12,7 +12,7 @@ Covers local development workflow plus the release/publish workflow split. Relea
 
 ## Prerequisites
 
-- Python 3.11+
+- Python 3.12+
 - [uv](https://docs.astral.sh/uv/) package manager
 - `git`
 
@@ -85,7 +85,7 @@ uv run ruff format src/                   # apply formatting
 uv run ruff format --check src/           # verify formatting without changes
 ```
 
-Configured rule set: `E`, `F`, `W`, `I`, `N`, `UP`, `B`, `C4`, `SIM`. Line length 100, target Python 3.11.
+Configured rule set: `E`, `F`, `W`, `I`, `N`, `UP`, `B`, `C4`, `SIM`. Line length 100, target Python 3.12.
 
 ### Mypy — type checking
 

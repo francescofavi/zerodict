@@ -113,7 +113,7 @@ ZeroDict is organized into the following modules:
 
 ### Type System
 
-ZeroDict uses modern Python 3.11+ type hints:
+ZeroDict uses modern Python 3.12+ type hints:
 
 ```python
 from typing import Any

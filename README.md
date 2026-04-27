@@ -15,7 +15,7 @@
 
 **Safe, explicit, and powerful manipulation of nested dict structures in Python.**
 
-ZeroDict is a zero-dependency dict wrapper for Python 3.11+ that makes working with nested data structures safe, explicit, and predictable. It eliminates the fragility of standard dicts without introducing the hidden side effects common in similar libraries.
+ZeroDict is a zero-dependency dict wrapper for Python 3.12+ that makes working with nested data structures safe, explicit, and predictable. It eliminates the fragility of standard dicts without introducing the hidden side effects common in similar libraries.
 
 ---
 
@@ -168,7 +168,7 @@ ZeroDict is designed for any scenario where you work with nested dictionaries an
 
 ## Installation
 
-**Requirements:** Python 3.11+ | No external dependencies (standard library only)
+**Requirements:** Python 3.12+ | No external dependencies (standard library only)
 
 ```bash
 pip install zerodict
