@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/francescofavi/zerodict/compare/v0.1.1...v0.1.2) (2026-04-28)
+
+
+### Maintenance
+
+* contributing policy and check_quality cleanup
+
 ## 0.1.1 (2026-03-30)
 
 ### Documentation
