@@ -13,9 +13,30 @@
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg?cacheSeconds=0)]()
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg?cacheSeconds=0)](https://docs.astral.sh/ruff/)
 
-**Safe, explicit, and powerful manipulation of nested dict structures in Python.**
+**Nested dicts without the boilerplate: dot-notation reads/writes, deep path API, structural diffs, atomic updates. Pure stdlib, zero runtime dependencies.**
 
-ZeroDict is a zero-dependency dict wrapper for Python 3.12+ that makes working with nested data structures safe, explicit, and predictable. It eliminates the fragility of standard dicts without introducing the hidden side effects common in similar libraries.
+ZeroDict wraps Python dicts so missing paths never crash your code, and deep writes never silently create phantom keys from typos. Reads are permissive, writes are strict — a deliberate inversion of how `addict`, `munch`, and `easydict` behave. It targets developers working with configuration files, API responses, and nested data pipelines who want predictable semantics without pulling in a dependency tree.
+
+### Key Value Points
+
+- **Safe reads.** Missing nested paths return a falsy sentinel instead of raising `KeyError`, and the underlying dict is never mutated as a side effect.
+- **Explicit deep writes.** `set_path()` is required for nested creation, so a typo raises `AttributeError` instead of producing a phantom key — the silent failure mode of `addict`, `munch`, and `easydict`.
+- **Path API with dot and array notation.** Expressions like `a.b.c` and `arr[0]` drive read, write, delete, and move operations.
+- **Atomic batch updates.** `set_many()` applies every path or rolls them all back — no partial state on failure.
+- **Change tracking.** `diff()` returns a precise list of adds, replaces, and deletes between two structures.
+- **Zero dependencies, full dict compatibility, always-on security limits.** Standard library only, drop-in for the dict interface (`len`, `in`, `keys`, `values`, `items`, iteration, `to_dict()`), with built-in checks on nesting depth, array bounds, key format, value size, and circular references.
+
+### How It Works
+
+ZeroDict follows a single design principle: **reads are permissive, writes are strict**. Attribute and bracket access never raise on missing keys, returning a falsy sentinel instead. Deep writes go through an explicit `set_path()` call that accepts dot-and-bracket path expressions, so creating nested structure is always an intentional act. The same path grammar powers `get_path`, `delete_path`, `move`, `set_many`, and `diff`.
+
+### When You Should Use It
+
+- **Configuration management** — load JSON/YAML into a dict and access nested settings without defensive `.get()` chains; batch-update settings atomically.
+- **API response processing** — read deeply nested fields without guarding every level for optional or missing keys.
+- **Data transformation pipelines** — reshape nested structures with path-based set/get/delete/move and audit changes via `diff()`.
+- **Prototyping and exploration** — build and manipulate nested data in notebooks or scripts without boilerplate.
+- **Handling untrusted nested data** — rely on the always-on security limits to bound depth, array indexes, key format, and value size.
 
 ---
 
@@ -65,82 +86,150 @@ This is particularly dangerous in configuration management and data pipelines, w
 
 ---
 
-## The Solution
+## Behavior in Detail
 
-ZeroDict solves both problems with a clear design principle: **safe reads, explicit writes**.
+The "permissive reads, strict writes" principle plays out through three concrete mechanisms.
 
-- **Reading** a missing path never crashes and never modifies your data. You get a falsy sentinel back, and your dict stays untouched.
-- **Writing** a deep path requires an explicit call (`set_path`), so typos are caught immediately instead of creating phantom keys.
+### The MissingPath sentinel
+
+When you traverse a path that doesn't exist, ZeroDict returns a `MissingPath` object — not `None`, and not a freshly-created empty dict. It is falsy in boolean context, equal to `None` under `==`, and chainable, so deep traversal of a missing path never raises and never mutates the underlying data:
 
 ```python
+config = ZeroDict({"db": {"host": "localhost"}})
+
+config.cache              # MissingPath (no KeyError, no mutation)
+config.cache.ttl.timeout  # Still MissingPath, still no mutation
+bool(config.cache)        # False
+config.cache == None      # True
+config.cache is None      # False — MissingPath is its own type
+```
+
+The last line matters in practice: `is None` will not detect a missing path. Use `== None`, plain truthiness, or `"key" in zd` to distinguish a real `None` value from an absent key.
+
+### Asymmetric attribute access
+
+Attribute reads are permissive on any depth. Attribute writes are strict — they only succeed for keys that already exist at the target level, plus top-level key creation. Anything deeper requires `set_path()`:
+
+```python
+config = ZeroDict({"db": {"host": "localhost"}})
+
+config.db.host = "remote"           # OK — db.host already exists
+config.new_field = "value"          # OK — top-level key creation
+config.databse.host = "localhost"   # AttributeError — 'databse' missing
+```
+
+This asymmetry is what eliminates the typo-into-phantom-key class of bugs that affects `addict`, `munch`, and `easydict`.
+
+### A single path grammar
+
+The same `a.b.c` and `arr[0]` expressions drive every nested operation: `get_path`, `set_path`, `delete_path`, `move`, `set_many`, and `diff`. Learn the grammar once and you have read, write, batch, and audit covered:
+
+```python
+config.set_path("servers[0].host", "prod-1")
+config.get_path("servers[0].host")
+config.delete_path("servers[0].host")
+config.move("servers[0]", "archive.first_server")
+```
+
+The underlying storage is a plain dict — `to_dict()` returns it unmodified, and ZeroDict implements the standard dict interface in full, so it composes cleanly with code that expects a dict-like object.
+
+---
+
+## Capability Map
+
+A quick lookup of what to reach for when you need it. Each capability is documented in full under [Core Features](#core-features) and the [API Reference](https://github.com/francescofavi/zerodict/blob/main/docs/API_REFERENCE.md).
+
+| You want to… | Reach for | Where to read more |
+|---|---|---|
+| Read a nested field safely | attribute access or `get_path()` | [Safe Reading](#safe-reading-with-dot-notation) |
+| Create deep structure intentionally | `set_path()` | [Path API](#path-api-for-deep-creation) |
+| Address arrays in a path | `set_path("a[0].b", …)` | [Array Manipulation](#array-manipulation) |
+| Apply many updates atomically | `set_many()` | [Atomic Batch Updates](#atomic-batch-updates) |
+| Move or rename a subtree | `move()` | [Move/Rename Fields](#moverename-fields) |
+| Compare two structures | `diff()` | [Change Tracking](#change-tracking) |
+| Switch to exception-on-miss | `strict=True` | [Strict Mode](#strict-mode) |
+| Round-trip JSON or plain dict | `to_json` / `to_dict` / `from_*` | [Serialization](#serialization) |
+| Stop circular refs and oversized inputs | always-on security limits | [Known limits and open issues](#known-limits-and-open-issues) |
+
+These primitives compose: `set_many()` is `set_path()` applied transactionally, `move()` is `delete_path` + `set_path` in one atomic step, and `diff()` produces results in the same path grammar that `set_path` consumes — so an audit trail can be replayed by feeding it back into `set_many()`.
+
+---
+
+## Use Cases in Practice
+
+The introduction lists the target scenarios. Below is what each one looks like in code.
+
+### Configuration management
+
+Load a config file, read deep settings without `.get()` ladders, batch-update related settings atomically:
+
+```python
+import json
 from zerodict import ZeroDict
 
-config = ZeroDict({"database": {"host": "localhost"}})
+config = ZeroDict.from_json(open("config.json").read())
 
-# Reading: safe, no crashes, no side effects
-print(config.database.host)       # "localhost"
-print(config.cache.ttl)           # None-like sentinel (no KeyError!)
-print(config.a.b.c.d.e)           # Still safe, still no crash
+host = config.database.host
+timeout = config.get_path("api.timeout", default=30)
 
-# Writing: explicit intent required for deep paths
-config.set_path("cache.redis.host", "localhost")   # Creates entire path in one call
-config.set_path("cache.redis.port", 6379)
-
-# Typos are caught, not hidden
-config.databse.host = "localhost"  # AttributeError: 'databse' doesn't exist
-```
-
-This is not just syntactic sugar. It is a fundamentally different approach: reads are permissive (your code doesn't crash on optional fields), writes are strict (your code doesn't silently create wrong data).
-
----
-
-## What ZeroDict Gives You
-
-**Path API with dot notation and array support.** Navigate and manipulate nested structures with string paths instead of chained bracket access:
-
-```python
-config.set_path("api.endpoints.users", "/v1/users")
-config.set_path("servers[0].host", "prod-1")
-value = config.get_path("api.endpoints.users")
-config.delete_path("servers[0].host")
-```
-
-**Atomic batch updates.** Update multiple paths at once with all-or-nothing semantics. If any path fails validation, all changes are rolled back automatically:
-
-```python
 config.set_many({
-    "db.host": "localhost",
-    "db.port": 5432,
+    "cache.enabled": True,
     "cache.ttl": 3600,
+    "logging.level": "INFO",
 })
-# All succeed, or none do. No partial state.
 ```
 
-**Change tracking.** Compare two structures and get a precise list of what changed:
+### API response processing
+
+Deeply nested API payloads can have any field missing without crashing the consumer:
 
 ```python
-changes = original.diff(modified)
-# [{"op": "replace", "path": "price", "before": 100, "after": 120},
-#  {"op": "add", "path": "discount", "after": 10}]
+import json
+from zerodict import ZeroDict
+
+response = ZeroDict(json.loads(http_body))
+
+email = response.data.user.email                          # MissingPath if absent
+city  = response.get_path("data.user.address.city",
+                          default="unknown")
+if response.data.user.email:
+    notify(response.data.user.email)
 ```
 
-**Security by default.** Built-in protections prevent abuse when handling untrusted data: nesting depth limits, array index bounds, key format validation, value size caps, and circular reference detection. These are not optional add-ons; they are always active.
+### Data transformation pipelines
 
-**Zero dependencies.** ZeroDict uses only the Python standard library. No transitive dependency tree, no version conflicts, no supply chain risk. It installs in milliseconds and adds nothing to your dependency audit.
+Reshape nested records with path operations and audit the result:
 
-**Full dict compatibility.** ZeroDict supports the standard dict interface (`len`, `in`, `keys`, `values`, `items`, `get`, `pop`, `update`, iteration). You can use it anywhere a dict-like object is expected, and convert back to a plain dict at any time with `to_dict()`.
+```python
+record = ZeroDict(raw_record)
 
----
+record.set_path("normalized.email", record.email.lower())
+record.move("legacy_address", "normalized.address")
+record.delete_path("internal.debug_flags")
 
-## Who Should Use ZeroDict
+audit = ZeroDict(raw_record).diff(record)   # before → after delta
+```
 
-ZeroDict is designed for any scenario where you work with nested dictionaries and want predictable, safe behavior:
+### Prototyping and exploration
 
-- **Configuration management**: load config files (JSON, YAML parsed to dict) and access nested settings without defensive `.get()` chains. Batch-update multiple settings atomically.
-- **API response processing**: access deeply nested fields in API responses without worrying about optional or missing keys. No more `response.get("data", {}).get("user", {}).get("email")`.
-- **Data transformation pipelines**: reshape nested structures with path-based set/get/delete/move operations. Track changes with `diff()`.
-- **Prototyping and exploration**: quickly build and manipulate nested data in notebooks or scripts without boilerplate.
-- **Any application handling untrusted nested data**: the built-in security limits protect against pathological inputs without additional code.
+Build nested experimental data in a notebook without intermediate-dict boilerplate:
+
+```python
+runs = ZeroDict({})
+
+runs.set_path("trials[0].params.lr", 1e-3)
+runs.set_path("trials[0].metrics.accuracy", 0.91)
+runs.set_path("trials[1].params.lr", 5e-4)
+runs.set_path("trials[1].metrics.accuracy", 0.93)
+```
+
+### Untrusted nested data
+
+The always-on limits (nesting depth, array index bounds, key format, value size, circular references) reject pathological inputs without extra code on your side:
+
+```python
+ZeroDict(untrusted_payload)   # rejected if any limit is exceeded
+```
 
 ---
 
