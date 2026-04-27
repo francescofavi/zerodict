@@ -1,6 +1,7 @@
 """Smoke-test all example scripts."""
 
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -15,7 +16,7 @@ scripts = [
 @pytest.mark.parametrize("script", scripts, ids=lambda p: p.name)
 def test_example_runs(script: Path) -> None:
     result = subprocess.run(
-        ["python", str(script)],
+        [sys.executable, str(script)],
         capture_output=True,
         text=True,
         timeout=30,
